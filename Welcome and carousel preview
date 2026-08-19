@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citimotors Las Piñas — Welcome Message & View Models Carousel Preview</title>
+<style>
+  /*
+    PAANO I-EDIT ANG PRESYO / LARAWAN:
+    Hanapin ang UNITS array sa <script> section sa ibaba (may malaking comment na
+    "EDIT MO DITO"). Palitan lang ang srp / cashout / imageUrl per unit.
+    Ang order dito ay dapat kaparehong-kapareho ng FEATURED_UNITS sa
+    "Build Welcome Carousel" node sa n8n workflow.
+  */
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #e9ebee;
+    margin: 0;
+    padding: 24px 12px;
+    color: #1c1e21;
+  }
+  .app-wrap { max-width: 480px; margin: 0 auto; }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #65676b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 24px 4px 8px;
+  }
+  .phone {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #e4e6eb;
+  }
+  .header .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #0866ff; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header .name { font-weight: 600; font-size: 15px; }
+  .header .sub { font-size: 12px; color: #65676b; }
+  .thread { padding: 14px; }
+  .bubble {
+    background: #f0f2f5;
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 85%;
+    white-space: pre-wrap;
+  }
+  .quick-actions { display: flex; flex-direction: column; gap: 6px; max-width: 85%; margin-top: 8px; }
+  .msg-button {
+    width: 100%;
+    text-align: center;
+    background: #fff;
+    border: none;
+    border-top: 1px solid #e4e6eb;
+    color: #0866ff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 8px;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .msg-button:first-child { border-top: none; }
+  .btn-group { border: 1px solid #e4e6eb; border-radius: 12px; overflow: hidden; max-width: 85%; margin-top: 6px; }
+
+  .carousel-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 14px 4px 8px;
+    font-size: 12px; color: #65676b;
+  }
+  .carousel {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 14px 14px;
+    scroll-snap-type: x mandatory;
+  }
+  .card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+    background: #fff;
+    border: 1px solid #e4e6eb;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card img, .card .img-fallback {
+    width: 100%; height: 150px; object-fit: cover; display: block;
+    background: #f0f2f5;
+  }
+  .img-fallback {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #90949c; text-align: center; padding: 8px;
+  }
+  .card-body { padding: 10px 12px 12px; }
+  .card-title { font-weight: 700; font-size: 13px; margin: 0 0 6px; }
+  .card-sub { font-size: 12px; color: #444; line-height: 1.6; margin: 0 0 10px; white-space: pre-wrap; }
+  .dupe-flag {
+    font-size: 10px; font-weight: 700; color: #8a5a00; background: #fff3cd;
+    display: inline-block; padding: 2px 6px; border-radius: 6px; margin-bottom: 6px;
+  }
+  .card-buttons { border-top: 1px solid #e4e6eb; }
+  .card-buttons button {
+    display: block; width: 100%; border: none; border-bottom: 1px solid #e4e6eb;
+    background: #fff; color: #0866ff; font-size: 12px; font-weight: 600;
+    padding: 8px 6px; cursor: pointer; text-align: center;
+  }
+  .card-buttons button:last-child { border-bottom: none; }
+
+  .log-panel {
+    background: #111417; color: #d6e3ff; border-radius: 12px;
+    padding: 12px 14px; font-family: "SF Mono", Consolas, monospace; font-size: 12px;
+    max-height: 220px; overflow-y: auto; margin-top: 8px;
+  }
+  .log-panel .empty { color: #74809b; }
+  .log-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-all; }
+  .log-line .ok { color: #7ee787; }
+
+  .modal-overlay {
+    display: none; position: static; margin: 8px 14px 0;
+    background: #f0f2f5; border-radius: 12px; padding: 12px; text-align: center;
+  }
+  .modal-overlay img { max-width: 100%; border-radius: 8px; }
+  .modal-overlay .close-btn { margin-top: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <div class="panel-title">1. Welcome message</div>
+  <div class="phone">
+    <div class="header">
+      <div class="avatar">🚗</div>
+      <div>
+        <div class="name">Citimotors Las Piñas</div>
+        <div class="sub">Mitsubishi AI Messenger Assistant</div>
+      </div>
+    </div>
+    <div class="thread">
+      <div class="bubble" id="welcome-text"></div>
+      <div class="btn-group" id="welcome-buttons"></div>
+    </div>
+  </div>
+
+  <div class="panel-title">2. View Models carousel</div>
+  <div class="phone">
+    <div class="carousel-toolbar">
+      <span id="pos-indicator">1 / 8</span>
+      <span>i-swipe pakanan para makita lahat</span>
+    </div>
+    <div class="carousel" id="carousel"></div>
+    <div class="modal-overlay" id="modal">
+      <img id="modal-img" src="" alt="">
+      <div id="modal-fallback" class="img-fallback" style="height:220px;"></div>
+      <button class="msg-button close-btn" onclick="closeModal()">Isara</button>
+    </div>
+  </div>
+
+  <div class="panel-title">3. Button test log — pindutin ang buttons sa itaas</div>
+  <div class="log-panel" id="log">
+    <div class="empty">Wala pang na-click. Tignan dito ang payload / URL ng bawat button.</div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   EDIT MO DITO — welcome message text (galing sa "Send Welcome
+   Message" node, jsonBody.message.attachment.payload.text)
+   ========================================================= */
+const WELCOME_TEXT = "👋 Hi! Welcome to Citimotors Las Piñas.\n\nI'm Romeo \"Meong\" Cuyacot, your Mitsubishi Sales Executive. 😊\n\n🚗 I can help you:\n✅ Latest Mitsubishi promos\n✅ Low down payment & monthly options\n✅ FREE quotation\n✅ Fast pre-qualification\n\n👇 Tap one of the options below to get started.";
+
+const WELCOME_BUTTONS = [
+  { title: "🚙 View Models", type: "postback", payload: "VIEW_MODELS" },
+  { title: "✅ Free Pre-Qualify", type: "web_url", url: "https://form.jotform.com/romeocuyacot1117/pre-qualification-form" },
+  { title: "📞 Contact Us", type: "postback", payload: "CONTACT_US" }
+];
+
+/* =========================================================
+   EDIT MO DITO — mga featured unit, kasunod ng pagkakasunod
+   sa FEATURED_UNITS ng "Build Welcome Carousel" node.
+   - srp / cashout: PLACEHOLDER lang ang mga ito ngayon, dahil
+     wala akong live access sa "Pricing" Google Sheet. Palitan
+     ng totoong SRP / 20% Cash Out mula sa sheet.
+   - imageUrl: lagyan ng direktang link ng larawan (halimbawa,
+     mula sa Page photo album) kung gusto mong makita yung buong
+     larawan dito. Kung iiwan blangko, lalabas ang generic
+     fallback box.
+   ========================================================= */
+const UNITS = [
+  { name: "L300 EXCEED",           photoId: "965958566495173", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "MIRAGE G4 GLX CVT",     photoId: "966130416477988", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "XPANDER GLX AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "XPANDER GLS AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "DESTINATOR GLS 4X2 AT", photoId: "965915673166129", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "MONTERO GLS AT",        photoId: "966854423072254", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "XFORCE GLS CVT",        photoId: "970336169390746", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
+  { name: "TRITON",                photoId: "968578362899860", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" }
+];
+
+const APPLICATION_FORM_URL = "https://form.jotform.com/romeocuyacot1117/citimotors-las-pias----------------";
+
+/* ============ wala nang kailangang i-edit sa ibaba ============ */
+
+const log = document.getElementById('log');
+function logEvent(label, detail, ok) {
+  if (log.querySelector('.empty')) log.innerHTML = "";
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = '<span class="' + (ok ? 'ok' : '') + '">[' + new Date().toLocaleTimeString() + ']</span> ' + label + ' → ' + detail;
+  log.prepend(line);
+}
+
+document.getElementById('welcome-text').textContent = WELCOME_TEXT;
+const wb = document.getElementById('welcome-buttons');
+WELCOME_BUTTONS.forEach(b => {
+  const btn = document.createElement('button');
+  btn.className = 'msg-button';
+  btn.textContent = b.title;
+  btn.onclick = () => {
+    if (b.type === 'web_url') {
+      logEvent(b.title, 'web_url → ' + b.url, true);
+      window.open(b.url, '_blank');
+    } else {
+      logEvent(b.title, 'postback payload = "' + b.payload + '"', true);
+      if (b.payload === 'VIEW_MODELS') {
+        document.querySelector('.panel-title:nth-of-type(2)');
+        renderCarousel();
+      }
+    }
+  };
+  wb.appendChild(btn);
+});
+
+const dupeCount = {};
+UNITS.forEach(u => { dupeCount[u.photoId] = (dupeCount[u.photoId] || 0) + 1; });
+
+const carousel = document.getElementById('carousel');
+const posIndicator = document.getElementById('pos-indicator');
+
+function renderCarousel() {
+  carousel.innerHTML = "";
+  UNITS.forEach((u, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    if (u.imageUrl) {
+      const img = document.createElement('img');
+      img.src = u.imageUrl;
+      img.alt = u.name;
+      img.onclick = () => openModal(u);
+      img.style.cursor = 'zoom-in';
+      img.onerror = () => {
+        img.remove();
+        card.insertBefore(makeFallback(u), card.firstChild);
+      };
+      card.appendChild(img);
+    } else {
+      card.appendChild(makeFallback(u));
+    }
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    let dupeBadge = "";
+    if (dupeCount[u.photoId] > 1) {
+      dupeBadge = '<div class="dupe-flag">shared photo ID (' + u.photoId + ')</div>';
+    }
+    body.innerHTML =
+      dupeBadge +
+      '<p class="card-title">🚗 ' + u.name + '</p>' +
+      '<p class="card-sub">💰 SRP: ₱' + u.srp + '\n💵 20% Cash Out: ₱' + u.cashout + '\n📩 Message me for a FREE quotation!</p>';
+
+    const btnWrap = document.createElement('div');
+    btnWrap.className = 'card-buttons';
+
+    const reqBtn = document.createElement('button');
+    reqBtn.textContent = '📝 REQUIREMENTS';
+    reqBtn.onclick = () => logEvent(u.name + ' → REQUIREMENTS', 'postback payload = "REQUIREMENTS"', true);
+    btnWrap.appendChild(reqBtn);
+
+    const appBtn = document.createElement('button');
+    appBtn.textContent = '✍️ APPLICATION FORM';
+    appBtn.onclick = () => {
+      logEvent(u.name + ' → APPLICATION FORM', 'web_url → ' + APPLICATION_FORM_URL, true);
+      window.open(APPLICATION_FORM_URL, '_blank');
+    };
+    btnWrap.appendChild(appBtn);
+
+    const contactBtn = document.createElement('button');
+    contactBtn.textContent = '📲 CONTACT US';
+    contactBtn.onclick = () => logEvent(u.name + ' → CONTACT US', 'postback payload = "CONTACT_US"', true);
+    btnWrap.appendChild(contactBtn);
+
+    body.appendChild(btnWrap);
+    card.appendChild(body);
+    carousel.appendChild(card);
+  });
+  updatePos();
+}
+
+function makeFallback(u) {
+  const div = document.createElement('div');
+  div.className = 'img-fallback';
+  div.textContent = 'Walang imageUrl na nakalagay para sa ' + u.name + ' (photoId: ' + u.photoId + ')';
+  return div;
+}
+
+function updatePos() {
+  const cardWidth = 230;
+  const idx = Math.min(UNITS.length - 1, Math.round(carousel.scrollLeft / cardWidth));
+  posIndicator.textContent = (idx + 1) + ' / ' + UNITS.length;
+}
+carousel.addEventListener('scroll', updatePos);
+
+function openModal(u) {
+  const modal = document.getElementById('modal');
+  const img = document.getElementById('modal-img');
+  const fallback = document.getElementById('modal-fallback');
+  modal.style.display = 'block';
+  if (u.imageUrl) {
+    img.src = u.imageUrl;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    fallback.style.display = 'flex';
+    fallback.textContent = u.name + ' — walang imageUrl';
+  }
+}
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+renderCarousel();
+</script>
+</body>
+</html>
