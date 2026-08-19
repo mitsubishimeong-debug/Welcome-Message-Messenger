@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Citimotors Las Piñas — Welcome Message & View Models Carousel Preview</title>
+<title>Citimotors Las Piñas — Messenger Preview</title>
 <style>
   /*
-    PAANO I-EDIT ANG PRESYO / LARAWAN:
+    PAANO I-EDIT ANG PRESYO:
     Hanapin ang UNITS array sa <script> section sa ibaba (may malaking comment na
-    "EDIT MO DITO"). Palitan lang ang srp / cashout / imageUrl per unit.
-    Ang order dito ay dapat kaparehong-kapareho ng FEATURED_UNITS sa
-    "Build Welcome Carousel" node sa n8n workflow.
+    "EDIT MO DITO"). Palitan lang ang srp / cashout per unit galing sa Pricing sheet.
+    Lahat ng ibang text (welcome, requirements, application form, contact us) ay
+    KOPYA NA MISMO ng totoong laman ng mga jsonBody sa n8n workflow mo -- huwag nang
+    baguhin dito, i-edit sa n8n mismo kung gusto mo baguhin.
   */
   * { box-sizing: border-box; }
   body {
@@ -57,9 +58,11 @@
     padding: 10px 14px;
     font-size: 14px;
     line-height: 1.5;
-    max-width: 85%;
+    max-width: 92%;
     white-space: pre-wrap;
+    margin-bottom: 8px;
   }
+  .bubble.new { border: 2px solid #0866ff; }
   .quick-actions { display: flex; flex-direction: column; gap: 6px; max-width: 85%; margin-top: 8px; }
   .msg-button {
     width: 100%;
@@ -97,13 +100,14 @@
     border-radius: 12px;
     overflow: hidden;
   }
-  .card img, .card .img-fallback {
-    width: 100%; height: 150px; object-fit: cover; display: block;
-    background: #f0f2f5;
+  .card .img-fallback {
+    width: 100%; height: 130px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    background: #f0f2f5; font-size: 11px; color: #90949c; text-align: center; padding: 8px;
   }
-  .img-fallback {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #90949c; text-align: center; padding: 8px;
+  .card .photo-link {
+    display: block; text-align: center; font-size: 11px; padding: 6px;
+    background: #eaf2ff; color: #0866ff; text-decoration: none; font-weight: 600;
   }
   .card-body { padding: 10px 12px 12px; }
   .card-title { font-weight: 700; font-size: 13px; margin: 0 0 6px; }
@@ -123,18 +127,11 @@
   .log-panel {
     background: #111417; color: #d6e3ff; border-radius: 12px;
     padding: 12px 14px; font-family: "SF Mono", Consolas, monospace; font-size: 12px;
-    max-height: 220px; overflow-y: auto; margin-top: 8px;
+    max-height: 180px; overflow-y: auto; margin-top: 8px;
   }
   .log-panel .empty { color: #74809b; }
   .log-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-all; }
   .log-line .ok { color: #7ee787; }
-
-  .modal-overlay {
-    display: none; position: static; margin: 8px 14px 0;
-    background: #f0f2f5; border-radius: 12px; padding: 12px; text-align: center;
-  }
-  .modal-overlay img { max-width: 100%; border-radius: 8px; }
-  .modal-overlay .close-btn { margin-top: 8px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -162,25 +159,31 @@
       <span>i-swipe pakanan para makita lahat</span>
     </div>
     <div class="carousel" id="carousel"></div>
-    <div class="modal-overlay" id="modal">
-      <img id="modal-img" src="" alt="">
-      <div id="modal-fallback" class="img-fallback" style="height:220px;"></div>
-      <button class="msg-button close-btn" onclick="closeModal()">Isara</button>
+  </div>
+
+  <div class="panel-title">3. Susunod na mga mensahe (lalabas depende sa pinindot mo)</div>
+  <div class="phone">
+    <div class="thread" id="reply-thread">
+      <div class="bubble" style="color:#90949c;">Wala pang pinipindot na button. I-click ang REQUIREMENTS, APPLICATION FORM, o CONTACT US sa alinman sa mga card sa itaas, o sa welcome buttons, para makita dito ang totoong reply message.</div>
     </div>
   </div>
 
-  <div class="panel-title">3. Button test log — pindutin ang buttons sa itaas</div>
+  <div class="panel-title">4. Button test log</div>
   <div class="log-panel" id="log">
-    <div class="empty">Wala pang na-click. Tignan dito ang payload / URL ng bawat button.</div>
+    <div class="empty">Wala pang na-click. Tignan dito ang postback payload / web_url ng bawat button.</div>
   </div>
 
 </div>
 
 <script>
 /* =========================================================
-   EDIT MO DITO — welcome message text (galing sa "Send Welcome
-   Message" node, jsonBody.message.attachment.payload.text)
+   Lahat ng text sa ibaba ay kopya na mismo ng totoong laman
+   ng jsonBody sa n8n nodes (Send Welcome Message, Send
+   Requirements Reply, Send Application Form Reply, Send
+   Contact Us Reply). Huwag nang baguhin dito -- sa n8n mo
+   baguhin kung gusto mong may bagong laman.
    ========================================================= */
+
 const WELCOME_TEXT = "👋 Hi! Welcome to Citimotors Las Piñas.\n\nI'm Romeo \"Meong\" Cuyacot, your Mitsubishi Sales Executive. 😊\n\n🚗 I can help you:\n✅ Latest Mitsubishi promos\n✅ Low down payment & monthly options\n✅ FREE quotation\n✅ Fast pre-qualification\n\n👇 Tap one of the options below to get started.";
 
 const WELCOME_BUTTONS = [
@@ -189,26 +192,34 @@ const WELCOME_BUTTONS = [
   { title: "📞 Contact Us", type: "postback", payload: "CONTACT_US" }
 ];
 
+const REQUIREMENTS_TEXT = "📋 REQUIREMENTS\n\n👔 EMPLOYED\n✅ 2 Valid Government IDs\n✅ Latest 3 Months Payslips\n✅ Certificate of Employment (COE)\n✅ Latest ITR (BIR Form 2316)\n✅ Latest 3 Months Bankstatement\n✅ Proof of Billing (Meralco, Maynilad, Internet, or Credit Card Billing)\n\n💼 BUSINESS / SELF-EMPLOYED\n✅ 2 Valid Government IDs\n✅ DTI or Business Permit\n✅ Latest 3 Months Bankstatement\n✅ Proof of Billing (Meralco, Maynilad, Internet, or Credit Card Billing)\n\n✈️ OFW / SEAMAN\n✅ 2 Valid Government IDs\n✅ Latest Remittance Receipts\n✅ Latest 3 Months Bankstatement\n✅ Proof of Employment (if available)\n✅ Proof of Billing (Meralco, Maynilad, Internet, or Credit Card Billing)\n\n📩 Message me kung may tanong po kayo sa requirements, Romeo po ito, happy to help! 😊";
+
+const APPLICATION_FORM_TEXT = "🔺 CITIMOTORS LAS PINAS ONLINE APPLICATION 🔺\n\n❗️ Note: All information will be treated strictly confidential. Please fill up this completely.\n\n✔️ PRINCIPAL BORROWER\n✅ LASTNAME:\n✅ FIRSTNAME:\n✅ MIDDLENAME:\n✅ BIRTHDATE:\n✅ MOBILE NUMBER:\n✅ EMAIL ADDRESS:\n✅ MARITAL STATUS:\n✅ HOME ADDRESS IN PHILIPPINES:\n✅ YEARS AT ADDRESS:\n✅ OWNED/LIVING w/ FAM or RENTED:\n✅ LANDLINE:\n✅ CIVIL STATUS:\n✅ GENDER:\n✅ NO. OF DEPENDENTS:\n✅ TIN NUMBER:\n\n✔️ PRINCIPAL WORK/BUSINESS DETAILS\n✅ EMPLOYMENT/BUSINESS NAME:\n✅ OFFICE ADDRESS:\n✅ LENGTH OF STAY:\n✅ OFFICE LANDLINE:\n✅ Monthly Gross Income:\n✅ POSITION:\n\n✔️ CO-MAKER (MUST BE SPOUSE, PARENTS, SIBLINGS AND COMMON LAW)\n✅ LASTNAME:\n✅ FIRSTNAME:\n✅ MIDDLENAME:\n✅ BIRTHDAY:\n✅ HOME ADDRESS IN PHILIPPINES:\n✅ RELATIONSHIP TO CO-MAKER:\n✅ MOBILE NUMBER:\n✅ EMAIL ADDRESS:\n✅ GENDER:\n✅ CIVIL STATUS:\n✅ CITIZENSHIP:\n✅ NO. OF DEPENDENTS:\n✅ TIN NUMBER:\n\n✔️ CO-MAKER WORK/BUSINESS DETAILS\n✅ EMPLOYMENT/BUSINESS NAME:\n✅ OFFICE ADDRESS:\n✅ LENGTH OF STAY:\n✅ OFFICE LANDLINE:\n✅ Monthly Gross Income:\n✅ POSITION:\n\n✔️ Vehicle and Financing Information\n✅ Unit Model and year:\n✅ Sales Consultant: ROMEO CUYACOT\n✅ Contact No: +639171537925\n✅ Unit price:\n✅ Downpayment (%):\n✅ Terms (mos/yrs):\n✅ Tin No.:\n✅ Bank/Branch:\n\nFill out po ninyo ito Mam/Sir, para maiproseso na natin agad yung application niyo po. 😊\n\n🔗 Pwede rin po online dito: https://form.jotform.com/romeocuyacot1117/citimotors-las-pias----------------";
+
+const CONTACT_US_TEXT = "📲 CONTACT US\n\n👨‍💼 Romeo \"Meong\" Cuyacot\nMitsubishi Sales Executive\n📍 Citimotors Las Piñas\n📞 +639171537925\n📧 mitsubishimeong@gmail.com\n\nFeel free to message or call anytime po for a FREE quotation and computation. 😊";
+
 /* =========================================================
    EDIT MO DITO — mga featured unit, kasunod ng pagkakasunod
    sa FEATURED_UNITS ng "Build Welcome Carousel" node.
-   - srp / cashout: PLACEHOLDER lang ang mga ito ngayon, dahil
-     wala akong live access sa "Pricing" Google Sheet. Palitan
-     ng totoong SRP / 20% Cash Out mula sa sheet.
-   - imageUrl: lagyan ng direktang link ng larawan (halimbawa,
-     mula sa Page photo album) kung gusto mong makita yung buong
-     larawan dito. Kung iiwan blangko, lalabas ang generic
-     fallback box.
+   - srp / cashout: PLACEHOLDER pa rin, wala akong live access
+     sa Pricing sheet. Ibigay mo sa akin ang totoong values at
+     ako mismo mag-a-update.
+   - photoId: totoong Facebook photo ID mula sa Photo IDs List
+     node. Ang "View actual photo" link sa bawat card ay
+     bumubukas ng totoong photo sa facebook.com -- hindi ko ito
+     ma-embed nang direkta dito dahil kailangan ng Page Access
+     Token para makuha ang image mula sa Graph API, at hindi ko
+     ma-expose yun sa isang public/static file.
    ========================================================= */
 const UNITS = [
-  { name: "L300 EXCEED",           photoId: "965958566495173", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "MIRAGE G4 GLX CVT",     photoId: "966130416477988", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "XPANDER GLX AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "XPANDER GLS AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "DESTINATOR GLS 4X2 AT", photoId: "965915673166129", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "MONTERO GLS AT",        photoId: "966854423072254", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "XFORCE GLS CVT",        photoId: "970336169390746", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" },
-  { name: "TRITON",                photoId: "968578362899860", srp: "PLACEHOLDER", cashout: "PLACEHOLDER", imageUrl: "" }
+  { name: "L300 EXCEED",           photoId: "965958566495173", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "MIRAGE G4 GLX CVT",     photoId: "966130416477988", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "XPANDER GLX AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "XPANDER GLS AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "DESTINATOR GLS 4X2 AT", photoId: "965915673166129", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "MONTERO GLS AT",        photoId: "966854423072254", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "XFORCE GLS CVT",        photoId: "970336169390746", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
+  { name: "TRITON",                photoId: "968578362899860", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" }
 ];
 
 const APPLICATION_FORM_URL = "https://form.jotform.com/romeocuyacot1117/citimotors-las-pias----------------";
@@ -224,6 +235,18 @@ function logEvent(label, detail, ok) {
   log.prepend(line);
 }
 
+const replyThread = document.getElementById('reply-thread');
+function showReply(text) {
+  document.querySelectorAll('#reply-thread .bubble').forEach(b => b.classList.remove('new'));
+  if (replyThread.querySelector('.bubble') && replyThread.children.length === 1 && replyThread.textContent.includes('Wala pang')) {
+    replyThread.innerHTML = "";
+  }
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble new';
+  bubble.textContent = text;
+  replyThread.prepend(bubble);
+}
+
 document.getElementById('welcome-text').textContent = WELCOME_TEXT;
 const wb = document.getElementById('welcome-buttons');
 WELCOME_BUTTONS.forEach(b => {
@@ -236,10 +259,7 @@ WELCOME_BUTTONS.forEach(b => {
       window.open(b.url, '_blank');
     } else {
       logEvent(b.title, 'postback payload = "' + b.payload + '"', true);
-      if (b.payload === 'VIEW_MODELS') {
-        document.querySelector('.panel-title:nth-of-type(2)');
-        renderCarousel();
-      }
+      if (b.payload === 'CONTACT_US') showReply(CONTACT_US_TEXT);
     }
   };
   wb.appendChild(btn);
@@ -253,30 +273,27 @@ const posIndicator = document.getElementById('pos-indicator');
 
 function renderCarousel() {
   carousel.innerHTML = "";
-  UNITS.forEach((u, idx) => {
+  UNITS.forEach((u) => {
     const card = document.createElement('div');
     card.className = 'card';
 
-    if (u.imageUrl) {
-      const img = document.createElement('img');
-      img.src = u.imageUrl;
-      img.alt = u.name;
-      img.onclick = () => openModal(u);
-      img.style.cursor = 'zoom-in';
-      img.onerror = () => {
-        img.remove();
-        card.insertBefore(makeFallback(u), card.firstChild);
-      };
-      card.appendChild(img);
-    } else {
-      card.appendChild(makeFallback(u));
-    }
+    const fallback = document.createElement('div');
+    fallback.className = 'img-fallback';
+    fallback.innerHTML = '<span>' + u.name + '</span><span style="font-size:9px;">photoId: ' + u.photoId + '</span>';
+    card.appendChild(fallback);
+
+    const photoLink = document.createElement('a');
+    photoLink.className = 'photo-link';
+    photoLink.href = 'https://www.facebook.com/photo.php?fbid=' + u.photoId;
+    photoLink.target = '_blank';
+    photoLink.textContent = '🖼 Buksan ang totoong photo sa Facebook';
+    card.appendChild(photoLink);
 
     const body = document.createElement('div');
     body.className = 'card-body';
     let dupeBadge = "";
     if (dupeCount[u.photoId] > 1) {
-      dupeBadge = '<div class="dupe-flag">shared photo ID (' + u.photoId + ')</div>';
+      dupeBadge = '<div class="dupe-flag">shared photo ID</div>';
     }
     body.innerHTML =
       dupeBadge +
@@ -288,20 +305,17 @@ function renderCarousel() {
 
     const reqBtn = document.createElement('button');
     reqBtn.textContent = '📝 REQUIREMENTS';
-    reqBtn.onclick = () => logEvent(u.name + ' → REQUIREMENTS', 'postback payload = "REQUIREMENTS"', true);
+    reqBtn.onclick = () => { logEvent(u.name + ' → REQUIREMENTS', 'postback payload = "REQUIREMENTS"', true); showReply(REQUIREMENTS_TEXT); };
     btnWrap.appendChild(reqBtn);
 
     const appBtn = document.createElement('button');
     appBtn.textContent = '✍️ APPLICATION FORM';
-    appBtn.onclick = () => {
-      logEvent(u.name + ' → APPLICATION FORM', 'web_url → ' + APPLICATION_FORM_URL, true);
-      window.open(APPLICATION_FORM_URL, '_blank');
-    };
+    appBtn.onclick = () => { logEvent(u.name + ' → APPLICATION FORM', 'web_url → ' + APPLICATION_FORM_URL, true); showReply(APPLICATION_FORM_TEXT); };
     btnWrap.appendChild(appBtn);
 
     const contactBtn = document.createElement('button');
     contactBtn.textContent = '📲 CONTACT US';
-    contactBtn.onclick = () => logEvent(u.name + ' → CONTACT US', 'postback payload = "CONTACT_US"', true);
+    contactBtn.onclick = () => { logEvent(u.name + ' → CONTACT US', 'postback payload = "CONTACT_US"', true); showReply(CONTACT_US_TEXT); };
     btnWrap.appendChild(contactBtn);
 
     body.appendChild(btnWrap);
@@ -311,38 +325,12 @@ function renderCarousel() {
   updatePos();
 }
 
-function makeFallback(u) {
-  const div = document.createElement('div');
-  div.className = 'img-fallback';
-  div.textContent = 'Walang imageUrl na nakalagay para sa ' + u.name + ' (photoId: ' + u.photoId + ')';
-  return div;
-}
-
 function updatePos() {
   const cardWidth = 230;
   const idx = Math.min(UNITS.length - 1, Math.round(carousel.scrollLeft / cardWidth));
   posIndicator.textContent = (idx + 1) + ' / ' + UNITS.length;
 }
 carousel.addEventListener('scroll', updatePos);
-
-function openModal(u) {
-  const modal = document.getElementById('modal');
-  const img = document.getElementById('modal-img');
-  const fallback = document.getElementById('modal-fallback');
-  modal.style.display = 'block';
-  if (u.imageUrl) {
-    img.src = u.imageUrl;
-    img.style.display = 'block';
-    fallback.style.display = 'none';
-  } else {
-    img.style.display = 'none';
-    fallback.style.display = 'flex';
-    fallback.textContent = u.name + ' — walang imageUrl';
-  }
-}
-function closeModal() {
-  document.getElementById('modal').style.display = 'none';
-}
 
 renderCarousel();
 </script>
