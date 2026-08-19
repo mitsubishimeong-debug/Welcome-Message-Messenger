@@ -212,14 +212,14 @@ const CONTACT_US_TEXT = "📲 CONTACT US\n\n👨‍💼 Romeo \"Meong\" Cuyacot\
      ma-expose yun sa isang public/static file.
    ========================================================= */
 const UNITS = [
-  { name: "2026 L300 EXCEED DUAL AC",           photoId: "965958566495173", srp: "₱1,039,000", cashout: "₱58,000" },
-  { name: "2026 MIRAGE G4 GLX CVT",     photoId: "966130416477988", srp: "₱841,000", cashout: "₱18,000" },
-  { name: "2026 XPANDER GLX AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
-  { name: "2026 XPANDER GLS AT",        photoId: "971070855983944", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
-  { name: "2026 DESTINATOR GLS 4X2 AT", photoId: "965915673166129", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
-  { name: "2026 MONTERO GLS AT",        photoId: "966854423072254", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
-  { name: "2027 XFORCE GLS CVT",        photoId: "970336169390746", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" },
-  { name: "2027 TRITON GX AT",                photoId: "968578362899860", srp: "PLACEHOLDER", cashout: "PLACEHOLDER" }
+  { name: "2026 L300 EXCEED DUAL AC", photoId: "965958566495173", srp: "1,039,000", cashout: "58,000", dpPercent: "20" },
+  { name: "2026 MIRAGE G4 GLX CVT",   photoId: "966130416477988", srp: "841,000",   cashout: "18,000", dpPercent: "30" },
+  { name: "2026 XPANDER GLX AT",      photoId: "971070855983944", srp: "1,159,000", cashout: "13,000", dpPercent: "20" },
+  { name: "2026 XPANDER GLS AT",      photoId: "971070855983944", srp: "1,259,000", cashout: "18,000", dpPercent: "20" },
+  { name: "2026 DESTINATOR GLS 4X2 AT", photoId: "965915673166129", srp: "1,599,000", cashout: "48,000", dpPercent: "20" },
+  { name: "2026 MONTERO GLS AT",      photoId: "966854423072254", srp: "1,927,000", cashout: "28,000", dpPercent: "20" },
+  { name: "2027 XFORCE GLS CVT",      photoId: "970336169390746", srp: "1,299,000", cashout: "28,000", dpPercent: "20" },
+  { name: "2027 TRITON GX AT",        photoId: "968578362899860", srp: "1,430,000", cashout: "28,000", dpPercent: "20" }
 ];
 
 const APPLICATION_FORM_URL = "https://form.jotform.com/romeocuyacot1117/citimotors-las-pias----------------";
@@ -298,7 +298,7 @@ function renderCarousel() {
     body.innerHTML =
       dupeBadge +
       '<p class="card-title">🚗 ' + u.name + '</p>' +
-      '<p class="card-sub">💰 SRP: ₱' + u.srp + '\n💵 20% Cash Out: ₱' + u.cashout + '\n📩 Message me for a FREE quotation!</p>';
+      '<p class="card-sub">💰 SRP: ₱' + u.srp + '\n💵 ' + u.dpPercent + '% Cash Out: ₱' + u.cashout + '\n📩 Message me for a FREE quotation!</p>';
 
     const btnWrap = document.createElement('div');
     btnWrap.className = 'card-buttons';
